@@ -1,6 +1,8 @@
 library('shiny')
 library('DT')
 
+secret_file_path <- './secretsDONOTSHARE/'
+source(paste(secret_file_path,'url.R',sep=''))
 source('configuration.R')
 
 shinyUI(
