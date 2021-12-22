@@ -1,8 +1,9 @@
-rm(list=ls()) 
+rm(list=ls())
 
-setwd('XXXXX')
+#setwd("/Users/liliwang/Documents/R/Paper-reading-competition-app/MultiLabLeaderboard-2022")
 
-
+#remotes::install_github("FlukeAndFeather/crul", ref = "enc_detect")
+#devtools::install_github("ropensci/rcrossref")
 library('googlesheets4')
 library('googlesheets')
 library('rcrossref')
@@ -97,10 +98,10 @@ plot_network = function(papers, community = FALSE) {
 
 
 update_doi_info <- function(doi) {
-  
-  doi_info <- sheets_read(prc4,sheet = 'read_only_doi')
+
+  doi_info <- read_sheet(prc4,sheet = 'read_only_doi')
   doi_info <- as.data.frame(doi_info)
-  
+
   new_doi <- setdiff(doi, doi_info$doi)
   if (length(new_doi) > 0) {
     print(paste0('updating ', length(new_doi), ' record'))
@@ -124,13 +125,13 @@ update_doi_info <- function(doi) {
     }
     doi_info$is_valid_doi=as.logical(doi_info$is_valid_doi)
     new_doi_info <- bind_rows(doi_info, new_formatted_doi)
-    
+
     #gs_edit_cells(prc, ws = 'read_only_doi', input = new_doi_info)
     #sheets_deauth()
-    sheets_write(data=new_doi_info,sheet = 'read_only_doi',ss=prc4)
-    
+    write_sheet(data=new_doi_info,sheet = 'read_only_doi',ss=prc4)
+
     #sheets_create(prc4,sheets = list(read=papersinitial,read_only_doi=new_doi_info))
-    
+
   }
   invisible(NULL)
 }
@@ -164,22 +165,22 @@ convert_date = function(d) {
 }
 
 aggregate_by_date = function(p, type) {
-  p = group_by_(p, 'handle', type, 'year')
+  p = group_by(p, handle, !!!syms(type), year )
   p = summarize(p, n = length(doi))
   p = ungroup(p)
   p = group_by(p, handle)
-  p = arrange_(p, 'handle', 'year', type)
+  p = arrange(p, handle, !!!syms(type), year )
   p = mutate(p, n_total = cumsum(n))
   p
 }
 # tmp = aggregate_by_date(papers, 'week')
 
 mean_per_personweek = function(p, type) {
-  p = group_by_(p, 'handle', type, 'year')
+  p = group_by(p, handle, !!!syms(type), year )
   p = summarize(p, n = length(doi))
   p = ungroup(p)
   p = group_by(p, handle)
-  p = arrange_(p, 'handle', 'year', type)
+  p = arrange(p, handle, !!!syms(type), year )
   p = mutate(p, n_total = cumsum(n))
   p = ungroup(p)
   s=aggregate(p$n, by=list(Category=p$week), FUN=sum)
@@ -191,11 +192,11 @@ mean_per_personweek = function(p, type) {
 
 
 count_by_date = function(p, type) {
-  p = group_by_(p, 'handle', type, 'year')
+  p = group_by(p, handle, !!!syms(type), year )
   p = summarize(p, n = length(doi))
   p = ungroup(p)
   p = group_by(p, handle)
-  p = arrange_(p, 'handle', 'year', type)
+  p = arrange(p, handle, !!!syms(type), year )
   p = mutate(p, n_total = cumsum(n))
   p = ungroup(p)
   s=aggregate(p$n, by=list(Category=p$week), FUN=sum)
@@ -222,8 +223,8 @@ identify_campaigns = function(date) {
 read_comp_data = function(urls) {
     comp_data_all=data.frame()
     for (ii in c(1:nrow(urls))){
-      ss=sheets_get(urls$compSheetID[ii])
-      tempdata=data.frame(sheets_read(ss))
+      ss=gs4_get(urls$compSheetID[ii])
+      tempdata=data.frame(read_sheet(ss))
       #print(tempdata)
       comp_data_all=rbind(comp_data_all,tempdata)
     }
@@ -241,7 +242,7 @@ options(gargle_oauth_cache = secret_file_path)
 files <- list.files(secret_file_path)
 token <- files[which(grepl('.com',files))]
 
-sheets_auth(
+gs4_auth(
   email = YOURemail,
   path = NULL,
   scopes = "https://www.googleapis.com/auth/spreadsheets",
@@ -252,8 +253,8 @@ sheets_auth(
 
 
 
-prc_raw <- sheets_get(DB_URL)
-raw_data <- sheets_read(prc_raw,sheet = 'raw_data')
+prc_raw <- gs4_get(DB_URL)
+raw_data <- read_sheet(prc_raw,sheet = 'raw_data')
 
 df <- data.frame(doi=NA,handle=raw_data$handle, date=raw_data$date,recommend=NA,comments=NA)
 
@@ -265,16 +266,16 @@ for (i in c(1:nrow(df))){
 }
 
 
-prc4 <- sheets_get(DB_URL)
-papers <- sheets_read(prc4,sheet = 'read')
+prc4 <- gs4_get(DB_URL)
+papers <- read_sheet(prc4,sheet = 'read')
 
 papersNEW <- rbind(papers,df)
 papersNEW <- papersNEW[!duplicated(papersNEW),]
 
-sheets_write(data=papersNEW,sheet = 'read',ss=prc4)
+write_sheet(data=papersNEW,sheet = 'read',ss=prc4)
 
 
-papers <- sheets_read(prc4,sheet = 'read')
+papers <- read_sheet(prc4,sheet = 'read')
 
 
 
@@ -298,8 +299,8 @@ temp=as.data.frame(unique(temp[,(c("campaign","count"))]))
 colnames(temp)[2]='Nreaders'
 count_week_year_camp=merge(count_week_year_camp,temp,by='campaign')
 
-comp_data <- sheets_get(LC_URL)
-sheets_write(count_week_year_camp,ss=comp_data,sheet = 'Sheet1')
+comp_data <- gs4_get(LC_URL)
+write_sheet(count_week_year_camp,ss=comp_data,sheet = 'Sheet1')
 
 #this reads all the competing lab metrix
 compSheetIDtable <- read.table(paste(secret_file_path,'comp_sheetIDs.txt',sep=''),sep = ',',header = F)
@@ -307,7 +308,7 @@ compSheetIDtable$V1 <- as.character(compSheetIDtable$V1)
 compSheetIDtable$V2 <- as.character(compSheetIDtable$V2)
 colnames(compSheetIDtable) <- c('lab','compSheetID')
 
-comp_data_all <- read_comp_data(compSheetIDtable)  
+comp_data_all <- read_comp_data(compSheetIDtable)
 comp_data_all$total_papers <- as.numeric(comp_data_all$total_papers)
 comp_data_all$Nreaders <- as.numeric(comp_data_all$Nreaders)
 comp_data_all$lab=as.factor(comp_data_all$lab)
@@ -317,10 +318,9 @@ comp_data_all <- subset(comp_data_all, mean_papers_per_personweek > 0)
 
 
 
-  
+
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
   "#D55E00", "#CC79A7")
-
 
 
 user_count <- group_by(papers, handle)
@@ -340,7 +340,7 @@ doi_count
 update_doi_info(papers$doi)
 
 
-doi_info <- sheets_read(prc4, 'read_only_doi')
+doi_info <- read_sheet(prc4, 'read_only_doi')
 doi_info <- left_join(doi_count, doi_info, by = c('doi'))
 
 
@@ -375,6 +375,10 @@ count_words = function(text) {
 
 
 shinyServer(function(input, output, session) {
+  
+  current_campaign = reactive({
+    dplyr::filter(campaigns, campaign == input$s_select_campaign)
+  })
 
   user_count <- reactive({
     user_count <- group_by(papers, handle)
@@ -383,9 +387,7 @@ shinyServer(function(input, output, session) {
     user_count
   })
 
-  
   output$PIname <- renderText(PIname)
-  
   output$p_above_pritch <- renderText({
     df <- user_count()
     jp <- dplyr::filter(df, handle == PIname)
@@ -393,9 +395,9 @@ shinyServer(function(input, output, session) {
     paste0(round(mean(lab$n > jp$n) * 100, 2), '%')
   })
 
-  
   output$user_count_table <- renderDataTable({
     df <- arrange(user_count(), desc(n))
+    df <- df %>% rename(User = handle)
     df
   }, escape = FALSE,
   options = list(paging = FALSE))
@@ -408,9 +410,9 @@ shinyServer(function(input, output, session) {
     df = user_count()
     p <- ggplot(df, aes(reorder(handle, -n), n))
     p <- p + geom_bar(stat = 'identity')
-    p <- p + xlab('user handle')
-    p <- p + ylab('number of papers')
-    p <- p + scale_y_continuous(breaks = seq(0, max(df$n), by = 5))
+    p <- p + xlab('User')
+    p <- p + ylab('Number of papers')
+    p <- p + scale_y_continuous(breaks = seq(0, ifelse(length(df$n) == 0, 1, max(df$n)), by = 2))
     p
   })
 
@@ -445,22 +447,22 @@ shinyServer(function(input, output, session) {
 
   output$recommendation_cloud <- renderPlot({
     recommendation_count = count_words(papers$recommend)
-
+    
     suppressWarnings(wordcloud(words = recommendation_count$word,
-        freq = recommendation_count$freq,
-      random.order = FALSE, rot.per = 0.35, colors = cbPalette)
-      )
+                               freq = recommendation_count$freq,
+                               random.order = FALSE, rot.per = 0.35, colors = cbPalette)
+    )
   })
-
+  
   output$comment_cloud <- renderPlot({
     comments = count_words(papers$comments)
-
+    
     suppressWarnings(
       wordcloud(words = comments$word, freq = comments$freq,
-        random.order = FALSE, rot.per = 0.35, colors = cbPalette)
-      )
+                random.order = FALSE, rot.per = 0.35, colors = cbPalette)
+    )
   })
-
+  
   output$network = renderPlot({
     plot_network(papers)
   })
@@ -468,49 +470,46 @@ shinyServer(function(input, output, session) {
   output$community = renderPlot({
     plot_network(papers, TRUE)
   })
-
+  
   output$p_n_summary = renderPlot({
     current_papers  <-  dplyr::filter(papers, in_campaign(date, current_campaign()))
     df  <-  aggregate_by_date(current_papers, 'week')
-    p  <-  ggplot(df, aes(week, n_total, color = handle))
+    p  <-  ggplot(df, aes(factor(week), n_total, color = handle))
     p  <-  p + geom_line()
     p  <-  p + geom_point()
+    p  <-  p + labs(x = "week", color = "User")
     p
   })
   
   ## this is to make the graph of mean papers per week for the lab
   #current_comp_data_all = dplyr::filter(comp_data_all, campaign=='Winter 2020')
-  
   output$mean_per_personweek_labcomp = renderPlot({
     current_comp_data_all  <-  dplyr::filter(comp_data_all, campaign==current_campaign()$campaign)
     current_comp_data_all <- current_comp_data_all[,c(2,5,7)]
     current_comp_data_all$week <- as.numeric(current_comp_data_all$week)
     current_comp_data_all$mean_papers_per_personweek <- as.numeric(current_comp_data_all$mean_papers_per_personweek)
     current_comp_data_all$lab <- as.character(current_comp_data_all$lab)
-    p  <-  ggplot(current_comp_data_all, aes(week, mean_papers_per_personweek, color=lab))
+    p  <-  ggplot(current_comp_data_all, aes(factor(week), mean_papers_per_personweek, color=lab))
     p  <-  p + geom_line()
-    p = p + geom_point()
+    p  <-  p + geom_point()
+    p  <-  p + labs(color = "Lab")
     p
   })
-  
+
   output$lab_count_table <- renderDataTable({
     current_comp_data_all = dplyr::filter(comp_data_all, campaign==current_campaign()$campaign)
+    
+    stopifnot( nrow(current_comp_data_all)>0 )
+    
     #current_comp_data_all = dplyr::filter(comp_data_all, campaign==default_current_campaign$campaign)
     df=aggregate(current_comp_data_all$mean_papers_per_personweek, by=list(Category=current_comp_data_all$lab), FUN=sum)
     df$x=round(df$x, digits = 2)
-    df <- arrange(df, desc(x))
+    df <- arrange(df, desc(x)) %>% rename(Lab = Category)
     df
     colnames(df)[2]='mean_n_papers_pp'
     df
   }, escape = FALSE,
   options = list(paging = FALSE))
   
-  
-
-
-  current_campaign = reactive({
-    dplyr::filter(campaigns, campaign == input$s_select_campaign)
-  })
 
 })
-
