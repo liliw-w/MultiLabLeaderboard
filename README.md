@@ -1,4 +1,62 @@
-# MultiLabLeaderboard
+2022 version
+
+## Original Repo
+
+https://github.com/Big-Bio/MultiLabLeaderboard
+
+
+## My notes
+
+### If you only need to change dates for each quarter every year
+Do the following steps.
+
+- Change date in `configuration.R`.
+- Do "Run App" to file `server.R`.
+- Run `deploy_MultiLabLeaderboard-2022.R`.
+
+### If you need to change from the beginning
+
+- Run `initial_setup.R` line-by-line.
+- Change date in `configuration.R`.
+- Do "Run App" to file `server.R`.
+- Run `deploy_MultiLabLeaderboard-2022.R`.
+
+### Some caveats when running scripts
+
+1. `initial_setup.R`
+
+- When do `gs4_auth()`, remember to check the perssion "allow ... to edit, delete ...".
+- No files in `~/.R/gargle/gargle-oauth`.
+- Package `filesstrings` doesn't matter, as only function `file.move` uses this pck, and this function actually is useless.
+- As long as `gs4_has_token()` gives `TRUE`, everything about token, permission, google sheets, is fine.
+
+2. `configuration.R`
+
+- Remember to check the `default_current_campaign` to be the first quarter, by default "Fall 2021".
+
+3. `server.R`
+
+- Something went wrong with pck `rcrossref`, so I needed to update pck `crul` by `remotes::install_github("FlukeAndFeather/crul", ref = "enc_detect")` back then (Dec 2021). Also use the most updated `rcrossref` by `devtools::install_github("ropensci/rcrossref")`.
+
+
+4. `deploy_MultiLabLeaderboard-2022.R`
+
+- To see what went wrong, run `rsconnect::showLogs()`.
+
+
+5. folder `secretsDONOTSHARE`
+
+    Automatically generated after running `initial_setup.R`.
+
+6. folder `rsconnect`
+
+    Automatically generated after configuring Shiny app like [section](#set-up-shinyapps).
+
+
+**See below for the orignal guideline of deploying the app**
+
+
+## The Authors' Guideline: MultiLabLeaderboard
 This is a paper reading tracker app for multiple labs to compare their average reading
 
 The first version of this leaderboard was written by Harold Pimentel. He blogs about it here!
@@ -19,7 +77,7 @@ Now, let's get to setting it up!
 
 This will work if you are using R 3.4.1, with 3.6.1 we know it does not work and does not through an error. Hopefully this will get fixed with R in the near future since this is a known "feature".
 
-First step: 
+### First step: 
 1) Clone the repo to your computer
 2) In the initial_setup.R script 
 2a) for 'YOURemail' type your gmail that is associated with your google drive that you will be using
@@ -29,20 +87,20 @@ change the working directory to be inside the repo, open the server.R file and s
 2d)  update the working directory such that it points to inside of the file where the repo files are stored 
 
 
-Second step: 
+### Second step: 
 1) Open R and run the "initial_setup.R" script, do it line by line, if for some reason you may have to do it twice
 -> this script will create a key for Google Sheets, DO NOT SHARE THIS KEY EVER
 -> this script will also create two new google sheets in your google drive, these serve as databases
 2) ***If you ran this multiple times, you will have multiple identically named google sheets in your drive, delete them all and do this again so that you only have one set of the two sheets it creates.
 
-Third step: Set up Slack
+### Third step: Set up Slack
 1) In your lab's slack account, create a new channel called "paper_reading_hook"
 2) Send the following message to the Slack channel you just created (you can delete this later from the database):
 
 https://doi.org/10.1534/genetics.117.300489 yes a method for detecting polygenic adaptation.
 
 
-Fourth step: Set up the Zapier. 
+### Fourth step: Set up the Zapier. 
 1) Get a Zapier account (zapier.com), a free account is fine
 2) Click the "Make a Zap!" button
 3) Find and select the Slack app
@@ -67,11 +125,11 @@ Fourth step: Set up the Zapier.
     entries are formatted <doi link> <one word recommendation> <comments> there must be a comment of some time, even if just a "."
   
   
- Fifth Step:
+### Fifth Step:
  1) Open the DB-leaderboard google sheet, go to the "raw_data" sheet. Delete the 2nd row that is full of "na"s. Nothing will work if you do not do this at this point. There must be an initializing entry (which you can delete later), but it needs to be a real entry, if you are entering things into slack, there should be entries here.
  
  
- Sixth Step:
+### Sixth Step:
  1) Open the server.R script. You should have already updated the working directory and the labname.
  2) In the top right there is a button that says "Run App" press it. Cross your fingers!
 3) If it does not run, then... well, have fun debugging
@@ -79,7 +137,7 @@ Fourth step: Set up the Zapier.
 
 
  
-Seventh Step: lab competitions
+### Seventh Step: lab competitions
  1) Right now you should have your lab name for lab competitions. If you don't want to setup lab competitions, you can move onto deploying your app now. You can also come back to this step in the future and set up competitions, if you do that, you will just need to redeploy the app once you add competing labs.
  2) Contact whoever at the lab you want to compete with is hosting the google sheets used for their instance of this reading leaderboard. Ask them to "read-only" share with you their "DB-leaderboard-metrics" google sheet. ****The must input into the share screen your email address that is associated with your google drive! So provide them with the correct email to invite you!
  3) You will be sent a link to their sheet, from the link, follow the link. Then, identify the sheet ID from the URL. (https://stackoverflow.com/questions/36061433/how-to-do-i-locate-a-google-spreadsheet-id)
@@ -88,14 +146,14 @@ Seventh Step: lab competitions
  6) you will need to re-deploy the app to shinyapps (ignore this if you have not deployed yet).
  
 
-Eighth Step: set up shinyapps
+### Eighth Step: set up shinyapps {#set-up-shinyapps}
  1) follow the directions here to set up an account and link to to Rstudio https://shiny.rstudio.com/articles/shinyapps.html
  2) comment out the setwd() command in your server.R file
  3) deploy your app to shinyapps!
  
- Ninth Step: victory lap
+### Ninth Step: victory lap
  1) Go tell your PI how cool you are!
  2) In lab meeting propose a food based reward for achieving some reading metric! 
  3) Reach out to other labs to start competing!
- 
+
  
