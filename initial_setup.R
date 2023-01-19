@@ -3,8 +3,6 @@ rm(list=ls())
 YOURemail <- 'liliw1@uchicago.edu'  #must be the email associated with hour google drive
 labname <- 'LiuLab'
 PIname <- 'xuanyao.yao'  #this is the handle of the PI on slack
-setwd("/Users/liliwang/Documents/R/Paper-reading-competition-app/MultiLabLeaderboard-2022")
-
 
 
 #devtools::install_github("tidyverse/googlesheets4")
@@ -33,12 +31,12 @@ raw_data <- data.frame(handle='na', date='na', text='na')
 read <- data.frame(doi='na', handle='na', date='na', recommend='na', comments='na')
 read_only_doi <- data.frame(url='na',title='na',authors='na',doi='na',is_valid_doi='FALSE')
 
-ss <- gs4_create( "DB-leaderboard-2022", sheets = list(read=read, read_only_doi=read_only_doi, raw_data=raw_data))
+ss <- gs4_create( "DB-leaderboard", sheets = list(read=read, read_only_doi=read_only_doi, raw_data=raw_data))
 temp <- gs4_get(ss)
 dbURL <- temp$spreadsheet_url
 
 
-labcmp <- gs4_create("DB-leaderboard-2022-metrics")
+labcmp <- gs4_create("DB-leaderboard-metrics")
 temp <- gs4_get(labcmp)
 labcomp_URL <- temp$spreadsheet_url
 labcomp_ID <- temp$spreadsheet_id

@@ -5,7 +5,7 @@ rm(list=ls())
 #remotes::install_github("FlukeAndFeather/crul", ref = "enc_detect")
 #devtools::install_github("ropensci/rcrossref")
 library('googlesheets4')
-library('googlesheets')
+#library('googlesheets')
 library('rcrossref')
 library('dplyr')
 library('ggplot2')
@@ -240,7 +240,7 @@ read_comp_data = function(urls) {
 options(gargle_oauth_cache = secret_file_path)
 
 files <- list.files(secret_file_path)
-token <- files[which(grepl('.com',files))]
+token <- files[which(grepl('@',files))]
 
 gs4_auth(
   email = YOURemail,
