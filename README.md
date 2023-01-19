@@ -1,6 +1,5 @@
-2022 version.
+**I removed year in scripts, slack channel name, zapier zap, and google sheets name so that no need to update these steps (except `configuration.R`) for a new year.**
 
-[See app here]( https://liliw1.shinyapps.io/multilableaderboard-2022/).
 
 ## Original Repo
 
@@ -14,14 +13,14 @@ Do the following steps.
 
 - Change date in `configuration.R`.
 - Do "Run App" to file `server.R`.
-- Run `deploy_MultiLabLeaderboard-2022.R`.
+- Run `deploy_MultiLabLeaderboard.R`.
 
 ### If you need to change from the beginning
 
 - Run `initial_setup.R` line-by-line.
 - Change date in `configuration.R`.
 - Do "Run App" to file `server.R`.
-- Run `deploy_MultiLabLeaderboard-2022.R`.
+- Run `deploy_MultiLabLeaderboard.R`.
 
 ### Some caveats when running scripts
 
@@ -41,7 +40,7 @@ Do the following steps.
 - Something went wrong with pck `rcrossref`, so I needed to update pck `crul` by `remotes::install_github("FlukeAndFeather/crul", ref = "enc_detect")` back then (Dec 2021). Also use the most updated `rcrossref` by `devtools::install_github("ropensci/rcrossref")`.
 
 
-4. `deploy_MultiLabLeaderboard-2022.R`
+4. `deploy_MultiLabLeaderboard.R`
 
 - To see what went wrong, run `rsconnect::showLogs()`.
 
