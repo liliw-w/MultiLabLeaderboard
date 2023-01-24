@@ -373,7 +373,8 @@ count_words = function(text) {
 }
 
 
-
+userPalette1 <- c("#30783f", "#e7b159", "#804d8d", "#a04436", "#2e5090", "#79443b", "#4f9e22", "#b4a997", "#b06500", "#ccac00")
+userPalette2 <- c("#acc9b2", "#ffeec5", "#dad0de", "#cfa19b", "#abb9d3", "#e5dcd6", "#e2e8c1", "#f9f8eb", "#ecddcc", "#d6cc99")
 shinyServer(function(input, output, session) {
   
   current_campaign = reactive({
@@ -410,7 +411,7 @@ shinyServer(function(input, output, session) {
     df = user_count()
     p <- ggplot(df, aes(reorder(handle, -n), n, fill = handle))
     p <- p + geom_bar(stat = 'identity')
-    p <- p + scale_fill_brewer(palette = "Dark2", guide = NULL)
+    p <- p + scale_fill_manual(values = userPalette1, guide = NULL)
     p <- p + xlab('User')
     p <- p + ylab('Number of papers')
     p <- p + scale_y_continuous(breaks = seq(0, ifelse(length(df$n) == 0, 1, max(df$n)), by = 2))
@@ -479,7 +480,7 @@ shinyServer(function(input, output, session) {
     p  <-  p + geom_point(size = 10, shape = 18)
     p  <-  p + geom_line(aes(group = handle), linetype = "dotted", size = 2)
     p  <-  p + labs(x = "Week", y = 'Number of papers', color = "User")
-    p  <-  p + scale_color_brewer(palette = "Dark2")
+    p  <-  p + scale_color_manual(values = userPalette1)
     p
   })
   
