@@ -388,7 +388,7 @@ shinyServer(function(input, output, session) {
   })
 
   output$PIname <- renderText(PIname)
-  output$p_above_pritch <- renderText({
+  output$p_above_pi <- renderText({
     df <- user_count()
     jp <- dplyr::filter(df, handle == PIname)
     lab <- dplyr::filter(df, handle != PIname)
@@ -408,8 +408,9 @@ shinyServer(function(input, output, session) {
 
   output$p_user_count <- renderPlot({
     df = user_count()
-    p <- ggplot(df, aes(reorder(handle, -n), n))
+    p <- ggplot(df, aes(reorder(handle, -n), n, fill = handle))
     p <- p + geom_bar(stat = 'identity')
+    p <- p + scale_fill_brewer(palette = "Dark2", guide = NULL)
     p <- p + xlab('User')
     p <- p + ylab('Number of papers')
     p <- p + scale_y_continuous(breaks = seq(0, ifelse(length(df$n) == 0, 1, max(df$n)), by = 2))
@@ -475,9 +476,10 @@ shinyServer(function(input, output, session) {
     current_papers  <-  dplyr::filter(papers, in_campaign(date, current_campaign()))
     df  <-  aggregate_by_date(current_papers, 'week')
     p  <-  ggplot(df, aes(factor(week), n_total, color = handle))
-    p  <-  p + geom_line()
-    p  <-  p + geom_point()
-    p  <-  p + labs(x = "week", color = "User")
+    p  <-  p + geom_point(size = 10, shape = 18)
+    p  <-  p + geom_line(aes(group = handle), linetype = "dotted", size = 2)
+    p  <-  p + labs(x = "Week", y = 'Number of papers', color = "User")
+    p  <-  p + scale_color_brewer(palette = "Dark2")
     p
   })
   
@@ -490,9 +492,10 @@ shinyServer(function(input, output, session) {
     current_comp_data_all$mean_papers_per_personweek <- as.numeric(current_comp_data_all$mean_papers_per_personweek)
     current_comp_data_all$lab <- as.character(current_comp_data_all$lab)
     p  <-  ggplot(current_comp_data_all, aes(factor(week), mean_papers_per_personweek, color=lab))
-    p  <-  p + geom_line()
-    p  <-  p + geom_point()
-    p  <-  p + labs(color = "Lab")
+    p  <-  p + geom_point(size = 10)
+    p  <-  p + geom_line(aes(group = lab), linetype = "dotted", size = 2)
+    p  <-  p + labs(x = "Week", y = 'Average papers per person', color = "Lab")
+    p  <-  p + scale_color_brewer(palette = "Accent")
     p
   })
 

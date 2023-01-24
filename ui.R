@@ -7,15 +7,15 @@ source('configuration.R')
 
 shinyUI(
   fluidPage(
-    titlePanel('leaderboard'),
+    titlePanel('Liu Lab Paper Reading'),
     fluidRow(
       tabsetPanel(
-        tabPanel('leaderboard',
+        tabPanel('Competition',
           fluidPage(
             plotOutput('p_user_count'),
             fluidRow(
               column(width = 4,
-                p(paste('percentage of lab beating ',PIname,': '), textOutput('p_above_pritch'))),
+                p(paste('Percentage of lab beating ',PIname,': '), textOutput('p_above_pi'))),
               column(width = 4),
               column(width = 8, selectInput('s_select_campaign', 'Which campaign:',
                   campaigns$campaign, selected = default_current_campaign$campaign))
@@ -36,7 +36,7 @@ shinyUI(
             )
             )
           ),
-        tabPanel('DOI info',
+        tabPanel('DOI Info',
           fluidPage(
             fluidRow(
               column(
@@ -46,7 +46,7 @@ shinyUI(
               )
             )
           ),
-        tabPanel('raw data',
+        tabPanel('Raw Data',
           {
             dataTableOutput('raw_data')
           })
