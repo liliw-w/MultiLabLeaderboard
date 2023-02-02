@@ -12,7 +12,7 @@ shinyUI(
       tabsetPanel(
         tabPanel('Competition',
           fluidPage(
-            plotOutput('p_user_count'),
+            plotOutput('mean_per_personweek_labcomp'),
             fluidRow(
               column(width = 4,
                 p(paste('Percentage of lab beating ',PIname,': '), textOutput('p_above_pi'))),
@@ -29,10 +29,10 @@ shinyUI(
                )
               ),
             fluidRow(
-              column(width = 8, plotOutput('mean_per_personweek_labcomp'))
-            ),
-            column(width = 4,
-                   DT::dataTableOutput("lab_count_table")
+              column(width = 8, plotOutput('p_user_count')),
+              column(width = 4,
+                     DT::dataTableOutput("lab_count_table")
+            )
             )
             )
           ),
