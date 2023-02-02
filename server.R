@@ -165,13 +165,16 @@ convert_date = function(d) {
 }
 
 aggregate_by_date = function(p, type) {
-  p = group_by(p, handle, !!!syms(type), year )
-  p = summarize(p, n = length(doi))
-  p = ungroup(p)
-  p = group_by(p, handle)
-  p = arrange(p, handle, !!!syms(type), year )
-  p = mutate(p, n_total = cumsum(n))
-  p
+  p = group_by(p, handle, !!!syms(type), year ) %>%
+    summarize(n = length(doi)) %>%
+    ungroup()
+  
+  tidyr::expand(p, handle, !!!syms(type), year) %>%
+    left_join(p, by = c('handle', type, 'year')) %>%
+    tidyr::replace_na(list(n = 0)) %>%
+    group_by(handle) %>%
+    mutate(n_total = cumsum(n)) %>%
+    ungroup()
 }
 # tmp = aggregate_by_date(papers, 'week')
 
@@ -487,19 +490,21 @@ shinyServer(function(input, output, session) {
   ## this is to make the graph of mean papers per week for the lab
   #current_comp_data_all = dplyr::filter(comp_data_all, campaign=='Winter 2020')
   output$mean_per_personweek_labcomp = renderPlot({
-    current_comp_data_all  <-  dplyr::filter(comp_data_all, campaign==current_campaign()$campaign)
-    current_comp_data_all <- current_comp_data_all[,c(2,5,7)]
-    current_comp_data_all$week <- as.numeric(current_comp_data_all$week)
-    current_comp_data_all$mean_papers_per_personweek <- as.numeric(current_comp_data_all$mean_papers_per_personweek)
-    current_comp_data_all$lab <- as.character(current_comp_data_all$lab)
-    p  <-  ggplot(current_comp_data_all, aes(factor(week), mean_papers_per_personweek, color=lab))
-    p  <-  p + geom_point(size = 10)
-    p  <-  p + geom_line(aes(group = lab), linetype = "dotted", size = 2)
-    p  <-  p + labs(x = "Week", y = 'Average papers per person', color = "Lab")
-    p  <-  p + scale_color_brewer(palette = "Accent")
+    aim_num_paper <- 80
+    current_papers  <-  dplyr::filter(papers, in_campaign(date, current_campaign()))
+    df  <-  aggregate_by_date(current_papers, 'week')
+    p  <-  ggplot(df, aes(factor(week), n_total, fill = handle)) +
+      geom_col() +
+      labs(x = "Week", y = 'Number of papers', color = "User") +
+      scale_fill_manual(values = userPalette1, guide = NULL) +
+      geom_point(
+        aes(y = aim_num_paper), 
+        shape = 23, size = 8, stroke = 3, 
+        color = "#f1c27d", fill = "#0000ff"
+      )
     p
   })
-
+  
   output$lab_count_table <- renderDataTable({
     current_comp_data_all = dplyr::filter(comp_data_all, campaign==current_campaign()$campaign)
     
