@@ -495,13 +495,14 @@ shinyServer(function(input, output, session) {
     df  <-  aggregate_by_date(current_papers, 'week')
     p  <-  ggplot(df, aes(factor(week), n_total, fill = handle)) +
       geom_col() +
-      labs(x = "Week", y = 'Number of papers', color = "User") +
+      labs(x = "Week", y = 'Number of papers', title = 'Let\'s reach the GOAL!', color = "User") +
       scale_fill_manual(values = userPalette1, guide = NULL) +
       geom_point(
         aes(y = aim_num_paper), 
         shape = 23, size = 8, stroke = 3, 
         color = "#f1c27d", fill = "#0000ff"
-      )
+      ) +
+      theme(plot.title = element_text(hjust = 0.5, face = "bold", color = "#4c362d"))
     p
   })
   
