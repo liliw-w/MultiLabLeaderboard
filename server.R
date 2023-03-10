@@ -168,7 +168,7 @@ aggregate_by_date = function(p, type) {
   p = group_by(p, handle, !!!syms(type), year ) %>%
     summarize(n = length(doi)) %>%
     ungroup()
-  
+
   tidyr::expand(p, handle, !!!syms(type), year) %>%
     left_join(p, by = c('handle', type, 'year')) %>%
     tidyr::replace_na(list(n = 0)) %>%
@@ -294,7 +294,7 @@ papers$campaign <- identify_campaigns(papers$date)
 count_week_year_camp <- melt(table(papers$week,papers$year,papers$campaign))
 colnames(count_week_year_camp) <- c('week','year','campaign','total_papers')
 count_week_year_camp$lab <- labname
-count_week_year_camp
+#count_week_year_camp
 
 #this adds to the total count the total number of readers
 temp=within(papers, { count <- ave(handle, campaign, FUN=function(x) length(unique(x)))})
@@ -329,14 +329,14 @@ cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
 user_count <- group_by(papers, handle)
 user_count <- dplyr::filter(user_count, in_campaign(date, default_current_campaign))
 user_count <- summarize(user_count, n = length(doi))
-user_count
+#user_count
 
 
 doi_count <- group_by(papers, doi)
 doi_count <- summarize(doi_count, n = length(doi), who = paste(handle, collapse = ' '),
                        recommendation = paste(recommend, collapse = ' '))
 doi_count <- arrange(doi_count, desc(n))
-doi_count
+#doi_count
 
 
 #debugonce(update_doi_info)
@@ -375,11 +375,12 @@ count_words = function(text) {
   d
 }
 
+aim_num_paper <- 80
 
 userPalette1 <- c("#30783f", "#e7b159", "#804d8d", "#a04436", "#2e5090", "#79443b", "#4f9e22", "#b4a997", "#b06500", "#ccac00")
 userPalette2 <- c("#acc9b2", "#ffeec5", "#dad0de", "#cfa19b", "#abb9d3", "#e5dcd6", "#e2e8c1", "#f9f8eb", "#ecddcc", "#d6cc99")
 shinyServer(function(input, output, session) {
-  
+
   current_campaign = reactive({
     dplyr::filter(campaigns, campaign == input$s_select_campaign)
   })
@@ -408,17 +409,6 @@ shinyServer(function(input, output, session) {
 
   output$doi_count <- renderDataTable({
     datatable(doi_count)
-  })
-
-  output$p_user_count <- renderPlot({
-    df = user_count()
-    p <- ggplot(df, aes(reorder(handle, -n), n, fill = handle))
-    p <- p + geom_bar(stat = 'identity')
-    p <- p + scale_fill_manual(values = userPalette1, guide = NULL)
-    p <- p + xlab('User')
-    p <- p + ylab('Number of papers')
-    p <- p + scale_y_continuous(breaks = seq(0, ifelse(length(df$n) == 0, 1, max(df$n)), by = 2))
-    p
   })
 
   output$doi_info <- DT::renderDataTable({
@@ -450,76 +440,88 @@ shinyServer(function(input, output, session) {
     datatable(res)
   })
 
-  output$recommendation_cloud <- renderPlot({
-    recommendation_count = count_words(papers$recommend)
-    
-    suppressWarnings(wordcloud(words = recommendation_count$word,
-                               freq = recommendation_count$freq,
-                               random.order = FALSE, rot.per = 0.35, colors = cbPalette)
-    )
-  })
-  
-  output$comment_cloud <- renderPlot({
-    comments = count_words(papers$comments)
-    
-    suppressWarnings(
-      wordcloud(words = comments$word, freq = comments$freq,
-                random.order = FALSE, rot.per = 0.35, colors = cbPalette)
-    )
-  })
-  
-  output$network = renderPlot({
-    plot_network(papers)
-  })
+  # output$recommendation_cloud <- renderPlot({
+  #   recommendation_count = count_words(papers$recommend)
+  #
+  #   suppressWarnings(wordcloud(words = recommendation_count$word,
+  #                              freq = recommendation_count$freq,
+  #                              random.order = FALSE, rot.per = 0.35, colors = cbPalette)
+  #   )
+  # })
 
-  output$community = renderPlot({
-    plot_network(papers, TRUE)
-  })
-  
+  # output$comment_cloud <- renderPlot({
+  #   comments = count_words(papers$comments)
+  #
+  #   suppressWarnings(
+  #     wordcloud(words = comments$word, freq = comments$freq,
+  #               random.order = FALSE, rot.per = 0.35, colors = cbPalette)
+  #   )
+  # })
+
+  # output$network = renderPlot({
+  #   plot_network(papers)
+  # })
+
+  # output$community = renderPlot({
+  #   plot_network(papers, TRUE)
+  # })
+
   output$p_n_summary = renderPlot({
     current_papers  <-  dplyr::filter(papers, in_campaign(date, current_campaign()))
     df  <-  aggregate_by_date(current_papers, 'week')
-    p  <-  ggplot(df, aes(factor(week), n_total, color = handle))
-    p  <-  p + geom_point(size = 10, shape = 18)
-    p  <-  p + geom_line(aes(group = handle), linetype = "dotted", size = 2)
-    p  <-  p + labs(x = "Week", y = 'Number of papers', color = "User")
-    p  <-  p + scale_color_manual(values = userPalette1)
-    p
+
+    ggplot(df, aes(factor(week), n_total, color = handle)) +
+      geom_point(size = 10, shape = 18) +
+      geom_line(aes(group = handle), linetype = "dotted", size = 2) +
+      labs(x = "Week", y = 'Number of papers (Total)', color = "User") +
+      scale_color_manual(values = userPalette1)
   })
-  
+
   ## this is to make the graph of mean papers per week for the lab
   #current_comp_data_all = dplyr::filter(comp_data_all, campaign=='Winter 2020')
   output$mean_per_personweek_labcomp = renderPlot({
-    aim_num_paper <- 80
     current_papers  <-  dplyr::filter(papers, in_campaign(date, current_campaign()))
     df  <-  aggregate_by_date(current_papers, 'week')
-    p  <-  ggplot(df, aes(factor(week), n_total, fill = handle)) +
+
+    ggplot(df, aes(factor(week), n_total, fill = handle)) +
       geom_col() +
-      labs(x = "Week", y = 'Number of papers', title = 'Let\'s reach the GOAL!', color = "User") +
+      geom_hline(yintercept = aim_num_paper, linetype = "dashed", color = "#4c362d", size = 1) +
+      geom_text(x = 1, y = aim_num_paper - 5, label = "Round 1", color = "#4c362d") +
+      # geom_point(
+      #   aes(y = aim_num_paper),
+      #   shape = 23, size = 8, stroke = 3,
+      #   color = "#f1c27d", fill = "#0000ff"
+      # ) +
+      labs(x = "Week", y = 'Number of papers (Total)', title = 'Let\'s reach the GOAL!', color = "User") +
       scale_fill_manual(values = userPalette1, guide = NULL) +
-      geom_point(
-        aes(y = aim_num_paper), 
-        shape = 23, size = 8, stroke = 3, 
-        color = "#f1c27d", fill = "#0000ff"
-      ) +
       theme(plot.title = element_text(hjust = 0.5, face = "bold", color = "#4c362d"))
-    p
   })
-  
+
+  output$p_user_count <- renderPlot({
+    current_papers  <-  dplyr::filter(papers, in_campaign(date, current_campaign()))
+    df  <-  aggregate_by_date(current_papers, 'week')
+
+    ggplot(df, aes(factor(week), n, color = handle)) +
+      geom_point(size = 10, shape = 18) +
+      geom_line(aes(group = handle), size = 2, linetype = "solid") +
+      labs(x = "Week", y = 'Number of papers (Weekly)', color = "User") +
+      scale_color_manual(values = userPalette1, guide = NULL) +
+      scale_y_continuous(breaks = seq(0, 20, by = 2))
+  })
+
   output$lab_count_table <- renderDataTable({
     current_comp_data_all = dplyr::filter(comp_data_all, campaign==current_campaign()$campaign)
-    
+
     stopifnot( nrow(current_comp_data_all)>0 )
-    
+
     #current_comp_data_all = dplyr::filter(comp_data_all, campaign==default_current_campaign$campaign)
     df=aggregate(current_comp_data_all$mean_papers_per_personweek, by=list(Category=current_comp_data_all$lab), FUN=sum)
     df$x=round(df$x, digits = 2)
     df <- arrange(df, desc(x)) %>% rename(Lab = Category)
-    df
     colnames(df)[2]='mean_n_papers_pp'
     df
   }, escape = FALSE,
   options = list(paging = FALSE))
-  
+
 
 })
