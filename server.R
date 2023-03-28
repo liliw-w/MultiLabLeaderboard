@@ -375,7 +375,12 @@ count_words = function(text) {
   d
 }
 
-aim_num_paper <- 80
+
+
+
+aim_round1 <- 80
+aim_round2 <- 173
+
 
 userPalette1 <- c("#30783f", "#e7b159", "#804d8d", "#a04436", "#2e5090", "#79443b", "#4f9e22", "#b4a997", "#b06500", "#ccac00")
 userPalette2 <- c("#acc9b2", "#ffeec5", "#dad0de", "#cfa19b", "#abb9d3", "#e5dcd6", "#e2e8c1", "#f9f8eb", "#ecddcc", "#d6cc99")
@@ -393,12 +398,12 @@ shinyServer(function(input, output, session) {
   })
 
   output$PIname <- renderText(PIname)
-  output$p_above_pi <- renderText({
-    df <- user_count()
-    jp <- dplyr::filter(df, handle == PIname)
-    lab <- dplyr::filter(df, handle != PIname)
-    paste0(round(mean(lab$n > jp$n) * 100, 2), '%')
-  })
+  # output$p_above_pi <- renderText({
+  #   df <- user_count()
+  #   jp <- dplyr::filter(df, handle == PIname)
+  #   lab <- dplyr::filter(df, handle != PIname)
+  #   paste0(round(mean(lab$n > jp$n) * 100, 2), '%')
+  # })
 
   output$user_count_table <- renderDataTable({
     df <- arrange(user_count(), desc(n))
@@ -474,7 +479,7 @@ shinyServer(function(input, output, session) {
       geom_point(size = 10, shape = 18) +
       geom_line(aes(group = handle), linetype = "dotted", size = 2) +
       labs(x = "Week", y = 'Number of papers (Total)', color = "User") +
-      scale_color_manual(values = userPalette1)
+      scale_color_manual(values = userPalette1, guide = NULL)
   })
 
   ## this is to make the graph of mean papers per week for the lab
@@ -482,16 +487,21 @@ shinyServer(function(input, output, session) {
   output$mean_per_personweek_labcomp = renderPlot({
     current_papers  <-  dplyr::filter(papers, in_campaign(date, current_campaign()))
     df  <-  aggregate_by_date(current_papers, 'week')
+    x_axis <- factor(df$week)
+    latest_week <- tail(levels(x_axis), 1)
+    n_read_all <- nrow(current_papers)
 
-    ggplot(df, aes(factor(week), n_total, fill = handle)) +
+    ggplot(df, aes(x_axis, n_total, fill = handle)) +
       geom_col() +
-      geom_hline(yintercept = aim_num_paper, linetype = "dashed", color = "#4c362d", size = 1) +
-      geom_text(x = 1, y = aim_num_paper - 5, label = "Round 1", color = "#4c362d") +
-      # geom_point(
-      #   aes(y = aim_num_paper),
-      #   shape = 23, size = 8, stroke = 3,
-      #   color = "#f1c27d", fill = "#0000ff"
-      # ) +
+      geom_point(
+        aes(x = !!latest_week, y = aim_round2),
+        shape = 23, size = 8, stroke = 3,
+        color = "#f1c27d", fill = "#0000ff"
+      ) +
+      geom_text(x = latest_week, y = aim_round2 + 5, label = aim_round2, color = "#4c362d") +
+      geom_text(x = latest_week, y = n_read_all + 5, label = n_read_all, color = "#4c362d") +
+      geom_hline(yintercept = aim_round1, linetype = "dashed", color = "#4c362d", size = 1) +
+      geom_text(x = 1, y = aim_round1 - 5, label = "Round 1", color = "#4c362d") +
       labs(x = "Week", y = 'Number of papers (Total)', title = 'Let\'s reach the GOAL!', color = "User") +
       scale_fill_manual(values = userPalette1, guide = NULL) +
       theme(plot.title = element_text(hjust = 0.5, face = "bold", color = "#4c362d"))
@@ -505,23 +515,23 @@ shinyServer(function(input, output, session) {
       geom_point(size = 10, shape = 18) +
       geom_line(aes(group = handle), size = 2, linetype = "solid") +
       labs(x = "Week", y = 'Number of papers (Weekly)', color = "User") +
-      scale_color_manual(values = userPalette1, guide = NULL) +
+      scale_color_manual(values = userPalette1) +
       scale_y_continuous(breaks = seq(0, 20, by = 2))
   })
 
-  output$lab_count_table <- renderDataTable({
-    current_comp_data_all = dplyr::filter(comp_data_all, campaign==current_campaign()$campaign)
-
-    stopifnot( nrow(current_comp_data_all)>0 )
-
-    #current_comp_data_all = dplyr::filter(comp_data_all, campaign==default_current_campaign$campaign)
-    df=aggregate(current_comp_data_all$mean_papers_per_personweek, by=list(Category=current_comp_data_all$lab), FUN=sum)
-    df$x=round(df$x, digits = 2)
-    df <- arrange(df, desc(x)) %>% rename(Lab = Category)
-    colnames(df)[2]='mean_n_papers_pp'
-    df
-  }, escape = FALSE,
-  options = list(paging = FALSE))
+  # output$lab_count_table <- renderDataTable({
+  #   current_comp_data_all = dplyr::filter(comp_data_all, campaign==current_campaign()$campaign)
+  #
+  #   stopifnot( nrow(current_comp_data_all)>0 )
+  #
+  #   #current_comp_data_all = dplyr::filter(comp_data_all, campaign==default_current_campaign$campaign)
+  #   df=aggregate(current_comp_data_all$mean_papers_per_personweek, by=list(Category=current_comp_data_all$lab), FUN=sum)
+  #   df$x=round(df$x, digits = 2)
+  #   df <- arrange(df, desc(x)) %>% rename(Lab = Category)
+  #   colnames(df)[2]='mean_n_papers_pp'
+  #   df
+  # }, escape = FALSE,
+  # options = list(paging = FALSE))
 
 
 })
