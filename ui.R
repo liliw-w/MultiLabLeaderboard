@@ -25,11 +25,11 @@ shinyUI(
                DT::dataTableOutput("user_count_table")
                ),
              column(width = 8,
-               plotOutput('p_n_summary')
+               plotOutput('p_user_count')
                )
               ),
             fluidRow(
-              column(width = 8, plotOutput('p_user_count')),
+              column(width = 8, plotOutput('p_n_summary')),
               column(width = 4,
                      DT::dataTableOutput("lab_count_table")
             )
