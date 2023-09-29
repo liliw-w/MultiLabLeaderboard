@@ -378,8 +378,8 @@ count_words = function(text) {
 
 
 
-aim_round1 <- 80
-aim_round2 <- 173
+# aim_round1 <- 80
+# aim_round2 <- 173
 
 
 userPalette1 <- c("#30783f", "#e7b159", "#804d8d", "#a04436", "#2e5090", "#79443b", "#4f9e22", "#b4a997", "#b06500", "#ccac00")
@@ -493,15 +493,15 @@ shinyServer(function(input, output, session) {
 
     ggplot(df, aes(x_axis, n_total, fill = handle)) +
       geom_col() +
-      geom_point(
-        aes(x = !!latest_week, y = aim_round2),
-        shape = 23, size = 8, stroke = 3,
-        color = "#f1c27d", fill = "#0000ff"
-      ) +
-      geom_text(x = latest_week, y = aim_round2 + 5, label = aim_round2, color = "#4c362d") +
+      # geom_point(
+      #   aes(x = !!latest_week, y = aim_round2),
+      #   shape = 23, size = 8, stroke = 3,
+      #   color = "#f1c27d", fill = "#0000ff"
+      # ) +
+      # geom_text(x = latest_week, y = aim_round2 + 5, label = aim_round2, color = "#4c362d") +
       geom_text(x = latest_week, y = n_read_all + 5, label = n_read_all, color = "#4c362d") +
-      geom_hline(yintercept = aim_round1, linetype = "dashed", color = "#4c362d", size = 1) +
-      geom_text(x = 1, y = aim_round1 - 5, label = "Round 1", color = "#4c362d") +
+      #geom_hline(yintercept = aim_round1, linetype = "dashed", color = "#4c362d", size = 1) +
+      #geom_text(x = 1, y = aim_round1 - 5, label = "Round 1", color = "#4c362d") +
       labs(x = "Week", y = 'Number of papers (Total)', title = 'Let\'s reach the GOAL!', color = "User") +
       scale_fill_manual(values = userPalette1, guide = NULL) +
       theme(plot.title = element_text(hjust = 0.5, face = "bold", color = "#4c362d"))
